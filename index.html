@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ôn Thi Trắc Nghiệm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f6f5f1; --surface:#ffffff; --surface-2:#f0eee8; --line:#e2dfd6; --text:#1d1c19; --muted:#6c695f;
+    --accent:#2f5bd3; --accent-soft:#e6ecfb; --ok:#1f8a4c; --ok-soft:#e3f4ea; --bad:#c23b2e; --bad-soft:#fbe7e4; --warn:#a76a00; --warn-soft:#fdf1d8;
+    --radius:12px; --shadow:0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg:#141413; --surface:#1d1d1b; --surface-2:#262624; --line:#34332f; --text:#ecebe6; --muted:#a19e94;
+    --accent:#7b9cff; --accent-soft:#232c45; --ok:#4cc27e; --ok-soft:#1b3326; --bad:#ff7b6b; --bad-soft:#3a1f1c; --warn:#e8b14a; --warn-soft:#3a2e15;
+    --shadow:none; } }
+  :root[data-theme="dark"] {
+    --bg:#141413; --surface:#1d1d1b; --surface-2:#262624; --line:#34332f; --text:#ecebe6; --muted:#a19e94;
+    --accent:#7b9cff; --accent-soft:#232c45; --ok:#4cc27e; --ok-soft:#1b3326; --bad:#ff7b6b; --bad-soft:#3a1f1c; --warn:#e8b14a; --warn-soft:#3a2e15;
+    --shadow:none; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--text); font-family:'Be Vietnam Pro',system-ui,sans-serif; font-size:16px; line-height:1.55; }
+  button, input, select { font:inherit; color:inherit; }
+  .wrap { max-width:860px; margin:0 auto; padding:20px 16px 80px; }
+  header { display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+  header h1 { font-size:20px; margin:0; flex:1; cursor:pointer; }
+  .crumbs { color:var(--muted); font-size:14px; }
+  .btn { background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:8px 14px; cursor:pointer; font-weight:500; }
+  .btn:hover { border-color:var(--accent); }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn.ghost { background:transparent; }
+  .btn:disabled { opacity:.45; cursor:default; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); }
+  .card.click { cursor:pointer; transition:border-color .15s, transform .15s; }
+  .card.click:hover { border-color:var(--accent); transform:translateY(-1px); }
+  .card h2 { margin:0 0 4px; font-size:19px; }
+  .card h3 { margin:0 0 6px; font-size:16px; }
+  .muted { color:var(--muted); font-size:14px; }
+  .bar { height:6px; background:var(--surface-2); border-radius:6px; overflow:hidden; margin-top:12px; }
+  .bar > i { display:block; height:100%; background:var(--ok); }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .sec-title { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:26px 0 10px; font-weight:600; }
+  .quizbox { margin-top:14px; border-color:var(--accent); }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .chip { border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:6px 14px; cursor:pointer; font-size:14px; }
+  .chip.on { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); font-weight:600; }
+  .modes { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+  .q-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .q-text { font-size:18px; font-weight:600; margin:4px 0 16px; white-space:pre-wrap; }
+  .opt { display:flex; gap:12px; align-items:flex-start; width:100%; text-align:left; background:var(--surface); border:1.5px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:10px; cursor:pointer; }
+  .opt:hover:not(:disabled) { border-color:var(--accent); }
+  .opt .k { flex:none; width:28px; height:28px; border-radius:7px; background:var(--surface-2); display:grid; place-items:center; font-weight:700; font-size:14px; }
+  .opt.sel { border-color:var(--accent); background:var(--accent-soft); }
+  .opt.ok { border-color:var(--ok); background:var(--ok-soft); }
+  .opt.ok .k { background:var(--ok); color:#fff; }
+  .opt.bad { border-color:var(--bad); background:var(--bad-soft); }
+  .opt.bad .k { background:var(--bad); color:#fff; }
+  .opt:disabled { cursor:default; }
+  .badge { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; padding:3px 9px; border-radius:999px; background:var(--surface-2); color:var(--muted); }
+  .badge.high { background:var(--ok-soft); color:var(--ok); }
+  .badge.medium { background:var(--warn-soft); color:var(--warn); }
+  .badge.low { background:var(--bad-soft); color:var(--bad); }
+  .explain { background:var(--surface-2); border-radius:10px; padding:12px 14px; margin-top:6px; font-size:15px; }
+  .explain b { font-weight:600; }
+  .nav { display:flex; justify-content:space-between; gap:10px; margin-top:18px; }
+  .progress-top { height:4px; background:var(--surface-2); border-radius:4px; overflow:hidden; margin-bottom:16px; }
+  .progress-top > i { display:block; height:100%; background:var(--accent); transition:width .2s; }
+  .palette { display:flex; flex-wrap:wrap; gap:6px; margin-top:16px; }
+  .palette button { width:36px; height:32px; border-radius:7px; border:1px solid var(--line); background:var(--surface); cursor:pointer; font-size:13px; }
+  .palette button.done { background:var(--accent-soft); border-color:var(--accent); }
+  .palette button.cur { outline:2px solid var(--accent); }
+  .palette button.ok { background:var(--ok-soft); border-color:var(--ok); }
+  .palette button.bad { background:var(--bad-soft); border-color:var(--bad); }
+  .score { font-size:44px; font-weight:700; margin:4px 0; }
+  .list-item { padding:14px 0; border-bottom:1px solid var(--line); }
+  .list-item:last-child { border-bottom:none; }
+  .list-item .q { font-weight:600; margin-bottom:6px; }
+  .list-item .a { color:var(--ok); font-weight:500; }
+  .list-item .o { color:var(--muted); font-size:14px; }
+  .rv-opt { padding:3px 8px; margin:2px 0; border-radius:6px; font-size:15px; color:var(--muted); }
+  .rv-opt.right { color:var(--ok); background:var(--ok-soft); font-weight:600; }
+  .hidden-ans { cursor:pointer; }
+  .hidden-ans .rv-opt.right { color:var(--muted); background:none; font-weight:400; }
+  .hidden-ans .rv-ex { display:none; }
+  .rv-ex { margin-top:6px; font-size:14px; color:var(--muted); }
+  .rv-ex summary { cursor:pointer; color:var(--accent); }
+  a.btn { text-decoration:none; display:inline-block; }
+  input[type=search], input[type=number], select { background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:8px 12px; }
+  input[type=search] { width:100%; }
+  .timer { font-variant-numeric:tabular-nums; font-weight:600; }
+  .kbd { font-size:12px; color:var(--muted); margin-top:10px; }
+  .note { background:var(--warn-soft); color:var(--text); border-radius:10px; padding:12px 14px; font-size:14px; margin-bottom:16px; }
+  .empty { text-align:center; padding:40px 10px; color:var(--muted); }
+  label.toggle { display:inline-flex; gap:8px; align-items:center; font-size:14px; cursor:pointer; }
+  @media (max-width:520px) { .q-text { font-size:16px; } .score { font-size:36px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="home">📚 Ôn thi trắc nghiệm</h1>
+    <button class="btn ghost" id="themeBtn" title="Đổi giao diện sáng/tối">◐</button>
+  </header>
+  <div id="app"></div>
+</div>
+<script src="data.js"></script>
+<script>
+const DATA = window.QUIZ_DATA;
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const QUIZ_N = 50;
+const CONF = { high: 'Độ tin cậy cao', medium: 'Độ tin cậy vừa', low: 'Độ tin cậy thấp' };
+
+// ---------- persistence (per-viewer; works without it) ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('onthi:' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('onthi:' + k, JSON.stringify(v)); } catch {} },
+};
+let results = store.get('results', {}); // qid -> {ok:bool, n:count}
+let settings = store.get('settings', { shuffleQ: true, shuffleO: false, examN: 40, examMin: 40 });
+const saveResult = (q, ok) => { const r = results[q.id] || { n: 0 }; r.ok = ok; r.n++; results[q.id] = r; store.set('results', results); };
+
+// theme toggle
+const theme = store.get('theme', null); if (theme) document.documentElement.dataset.theme = theme;
+$('#themeBtn').onclick = () => {
+  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.dataset.theme = dark ? 'light' : 'dark'; store.set('theme', document.documentElement.dataset.theme);
+};
+$('#home').onclick = () => go('#/');
+
+// ---------- question pools ----------
+const norm = s => (s || '').toLowerCase().replace(/\s+/g, ' ').replace(/[^\p{L}\p{N} ]/gu, '').trim();
+function pool(subj, set) {
+  const S = DATA.subjects.find(s => s.id === subj);
+  if (set === 'all' || set === 'wrong' || set === 'unsure' || set === 'rand') {
+    const seen = new Set(), out = [];
+    for (const st of S.sets) for (const q of st.questions) {
+      const key = norm(q.question) + '|' + q.options.map(o => norm(o.text)).sort().join('|');
+      if (seen.has(key)) continue; seen.add(key); out.push(q);
+    }
+    if (set === 'wrong') return out.filter(q => results[q.id] && !results[q.id].ok);
+    if (set === 'unsure') return out.filter(q => q.confidence !== 'high');
+    return out;
+  }
+  return S.sets.find(s => s.id === set).questions;
+}
+const uniqueCount = subj => pool(subj, 'all').length;
+const doneStats = qs => { const d = qs.filter(q => results[q.id]); return { done: d.length, ok: d.filter(q => results[q.id].ok).length }; };
+
+// ---------- router ----------
+function go(h) { if (location.hash === h) render(); else location.hash = h; }
+addEventListener('hashchange', render);
+let session = null, timerId = null;
+
+function render() {
+  clearInterval(timerId); document.onkeydown = null;
+  const [, subj, set, mode] = location.hash.split('/');
+  if (!subj) return viewHome();
+  if (!set) return viewReview(subj);
+  if (set === 'settings') return viewSubject(subj);
+  if (mode === 'practice') return viewPractice(subj, set);
+  if (mode === 'quiz') return viewPractice(subj, set, true);
+  if (mode === 'exam') return viewExam(subj, set);
+  if (mode === 'list') return viewList(subj, set);
+  viewSubject(subj);
+}
+
+function viewHome() {
+  app.innerHTML = `
+    <p class="muted" style="margin-top:0">Chọn môn để bắt đầu. Tiến độ được lưu trên trình duyệt này.</p>
+    <div class="grid">${DATA.subjects.map(s => {
+      const qs = pool(s.id, 'all'), st = doneStats(qs);
+      return `<div class="card click" data-s="${s.id}">
+        <h2>${esc(s.code)}</h2><div class="muted">${esc(s.name)}</div>
+        <div class="muted" style="margin-top:10px">${qs.length} câu · ${s.sets.length} đề · đã làm ${st.done}</div>
+        <div class="bar"><i style="width:${qs.length ? st.ok / qs.length * 100 : 0}%"></i></div>
+      </div>`; }).join('')}</div>
+    <p class="muted" style="margin-top:28px">${esc(DATA.note || '')}</p>`;
+  app.querySelectorAll('[data-s]').forEach(el => el.onclick = () => go(`#/${el.dataset.s}`));
+}
+
+// Main study view: every question with its options, correct answer highlighted.
+function viewReview(subj) {
+  const S = DATA.subjects.find(s => s.id === subj); if (!S) return go('#/');
+  let set = store.get('rv:' + subj, 'all'), term = '', hide = false;
+  app.innerHTML = `
+    <div class="crumbs"><a href="#/">Trang chủ</a> / ${esc(S.code)}</div>
+    <h2 style="margin:6px 0 2px">${esc(S.code)} <span class="muted" style="font-weight:400">· ${esc(S.name)}</span></h2>
+    ${S.note ? `<p class="muted" style="margin:6px 0 0">⚠️ = đáp án chưa chắc chắn, nên đối chiếu thêm giáo trình.</p>` : ''}
+    <div class="card quizbox">
+      <div style="font-weight:600;margin-bottom:4px">✍️ Làm trắc nghiệm</div>
+      <div class="muted" style="font-size:14px;margin-bottom:10px">Câu hỏi được đảo thứ tự, chọn xong mới hiện đáp án và giải thích.</div>
+      <div class="chips">
+        ${S.sets.length > 1 || S.sets[0].questions.length > QUIZ_N ? `<button class="chip on" data-quiz="rand">🎲 Đề ngẫu nhiên ${QUIZ_N} câu</button>` : ''}
+        ${S.sets.map(s => `<button class="chip" data-quiz="${s.id}">${esc(s.name)} · ${Math.min(QUIZ_N, s.questions.length)} câu</button>`).join('')}
+      </div>
+      <label class="toggle" style="margin-top:10px"><input type="checkbox" id="qso" ${settings.shuffleO ? 'checked' : ''}> Đảo cả thứ tự A/B/C/D</label>
+    </div>
+    <div class="sec-title">📖 Danh sách câu hỏi kèm đáp án</div>
+    <div class="chips" id="sets"></div>
+    <div class="row" style="margin:12px 0 6px"><input type="search" id="q" placeholder="Tìm câu hỏi hoặc đáp án…" style="flex:1"></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
+      <span class="muted" id="cnt"></span>
+      <label class="toggle"><input type="checkbox" id="hide"> Che đáp án (bấm câu để xem)</label>
+    </div>
+    <div class="card" id="list"></div>
+    <div class="row" style="margin-top:18px"><a class="btn" href="#/${subj}/settings">✍️ Luyện tập / ⏱️ Thi thử</a></div>`;
+  const drawSets = () => {
+    $('#sets').innerHTML = [['all', `Tất cả (${uniqueCount(subj)})`], ...S.sets.map(s => [s.id, `${s.name} (${s.questions.length})`])]
+      .map(([id, label]) => `<button class="chip ${set === id ? 'on' : ''}" data-set="${id}">${esc(label)}</button>`).join('');
+    $('#sets').querySelectorAll('[data-set]').forEach(b => b.onclick = () => { set = b.dataset.set; store.set('rv:' + subj, set); drawSets(); drawList(); });
+  };
+  const drawList = () => {
+    const t = norm(term), qs = pool(subj, set);
+    const shown = qs.filter(q => !t || norm(q.question + ' ' + q.options.map(o => o.text).join(' ')).includes(t));
+    $('#cnt').textContent = `${shown.length} câu`;
+    $('#list').innerHTML = shown.length ? shown.map((q, j) => `
+      <div class="list-item rv ${hide ? 'hidden-ans' : ''}">
+        <div class="q">${j + 1}. ${esc(q.question)}${q.confidence && q.confidence !== 'high' ? ' <span title="Đáp án chưa chắc chắn">⚠️</span>' : ''}${q.multi ? ' <span class="badge">nhiều đáp án</span>' : ''}</div>
+        ${q.options.map(o => `<div class="rv-opt ${q.answer.includes(o.key) ? 'right' : ''}">${q.answer.includes(o.key) ? '✓' : '&nbsp;'} ${o.key}. ${esc(o.text)}</div>`).join('')}
+        ${q.key_fact ? `<div class="rv-ex rv-fact">💡 ${esc(q.key_fact)}</div>` : ''}
+        ${q.note ? `<div class="rv-ex" style="color:var(--warn)">✎ ${esc(q.note)}</div>` : ''}
+        ${q.explanation ? `<details class="rv-ex"><summary>Giải thích</summary>${esc(q.explanation)}</details>` : ''}
+      </div>`).join('') : '<div class="empty">Không tìm thấy câu nào.</div>';
+    $('#list').querySelectorAll('.hidden-ans').forEach(el => el.onclick = () => el.classList.remove('hidden-ans'));
+  };
+  $('#q').oninput = e => { term = e.target.value; drawList(); };
+  $('#hide').onchange = e => { hide = e.target.checked; drawList(); };
+  $('#qso').onchange = e => { settings.shuffleO = e.target.checked; store.set('settings', settings); };
+  app.querySelectorAll('[data-quiz]').forEach(b => b.onclick = () => go(`#/${subj}/${b.dataset.quiz}/quiz`));
+  drawSets(); drawList();
+}
+
+function viewSubject(subj) {
+  const S = DATA.subjects.find(s => s.id === subj); if (!S) return go('#/');
+  let set = store.get('set:' + subj, 'all');
+  const draw = () => {
+    const qs = pool(subj, set), st = doneStats(qs);
+    const wrongN = pool(subj, 'wrong').length, unsureN = pool(subj, 'unsure').length;
+    app.innerHTML = `
+      <div class="crumbs"><a href="#/">Trang chủ</a> / ${esc(S.code)}</div>
+      <h2 style="margin:6px 0 2px">${esc(S.code)} <span class="muted" style="font-weight:400">· ${esc(S.name)}</span></h2>
+      ${S.note ? `<div class="note" style="margin-top:12px">${esc(S.note)}</div>` : ''}
+      <div class="sec-title">Bộ câu hỏi</div>
+      <div class="chips">
+        <button class="chip ${set === 'all' ? 'on' : ''}" data-set="all">Tất cả (${uniqueCount(subj)} câu, bỏ trùng)</button>
+        ${S.sets.map(s => `<button class="chip ${set === s.id ? 'on' : ''}" data-set="${s.id}">${esc(s.name)} (${s.questions.length})</button>`).join('')}
+        <button class="chip ${set === 'wrong' ? 'on' : ''}" data-set="wrong" ${wrongN ? '' : 'disabled'}>❌ Câu đã sai (${wrongN})</button>
+        ${unsureN ? `<button class="chip ${set === 'unsure' ? 'on' : ''}" data-set="unsure">⚠️ Đáp án chưa chắc (${unsureN})</button>` : ''}
+      </div>
+      <p class="muted">${qs.length} câu · đã làm ${st.done} · đúng ${st.ok}</p>
+      <div class="sec-title">Chế độ</div>
+      <div class="modes">
+        <div class="card click" data-m="practice"><h3>✍️ Luyện tập</h3><div class="muted">Chọn là biết đúng sai ngay, có giải thích.</div></div>
+        <div class="card click" data-m="exam"><h3>⏱️ Thi thử</h3><div class="muted">Bốc ngẫu nhiên, tính giờ, chấm điểm cuối bài.</div></div>
+        <div class="card click" data-m="list"><h3>📖 Xem nhanh</h3><div class="muted">Danh sách câu hỏi kèm đáp án, tìm kiếm được.</div></div>
+      </div>
+      <div class="sec-title">Tùy chọn</div>
+      <div class="row">
+        <label class="toggle"><input type="checkbox" id="sq" ${settings.shuffleQ ? 'checked' : ''}> Trộn thứ tự câu</label>
+        <label class="toggle"><input type="checkbox" id="so" ${settings.shuffleO ? 'checked' : ''}> Trộn đáp án</label>
+        <label class="toggle">Thi thử: <input type="number" id="en" min="5" max="300" value="${settings.examN}" style="width:76px"> câu</label>
+        <label class="toggle"><input type="number" id="em" min="1" max="180" value="${settings.examMin}" style="width:70px"> phút</label>
+      </div>
+      <div class="row" style="margin-top:20px"><button class="btn" id="reset">Xóa tiến độ môn này</button></div>`;
+    app.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { set = b.dataset.set; store.set('set:' + subj, set); draw(); });
+    app.querySelectorAll('[data-m]').forEach(c => c.onclick = () => { if (!pool(subj, set).length) return; go(`#/${subj}/${set}/${c.dataset.m}`); });
+    const saveS = () => { settings = { shuffleQ: $('#sq').checked, shuffleO: $('#so').checked, examN: +$('#en').value || 40, examMin: +$('#em').value || 40 }; store.set('settings', settings); };
+    ['#sq', '#so', '#en', '#em'].forEach(id => $(id).onchange = saveS);
+    $('#reset').onclick = () => { if (!confirm('Xóa toàn bộ tiến độ của môn này?')) return; pool(subj, 'all').forEach(q => delete results[q.id]); S.sets.forEach(s => s.questions.forEach(q => delete results[q.id])); store.set('results', results); draw(); };
+  };
+  draw();
+}
+
+// prepare a question for display: optional option shuffle, keeps original keys for answer checking
+function prep(q) {
+  const opts = settings.shuffleO && !/cả|all of|both|none of|tất cả/i.test(q.options.map(o => o.text).join(' ')) ? shuffle(q.options) : q.options;
+  return { q, opts: opts.map((o, i) => ({ ...o, show: String.fromCharCode(65 + i) })) };
+}
+const answerText = it => it.opts.filter(o => it.q.answer.includes(o.key)).map(o => `${o.show}. ${o.text}`).join(' · ');
+function metaBadges(q) {
+  const parts = [];
+  if (q.confidence) parts.push(`<span class="badge ${q.confidence}">${CONF[q.confidence]}${q.source === 'key' ? ' · có đáp án gốc' : ''}</span>`);
+  if (q.multi) parts.push(`<span class="badge">Chọn nhiều đáp án</span>`);
+  return parts.join(' ');
+}
+function explainBox(it) {
+  const q = it.q; const bits = [`<div><b>Đáp án:</b> ${esc(answerText(it))}</div>`];
+  if (q.explanation) bits.push(`<div style="margin-top:4px">${esc(q.explanation)}</div>`);
+  if (q.comment_answer) {
+    const ca = q.comment_answer.replace(/\s/g, '').split(/[,;/]/).filter(Boolean).sort().join(',');
+    const same = ca === q.answer.slice().sort().join(',');
+    const mapped = q.comment_answer.replace(/\s/g, '').split(/[,;/]/).map(k => it.opts.find(o => o.key === k)?.show || k).join(', ');
+    bits.push(`<div class="muted" style="margin-top:6px">Bình luận trên FUOverflow chọn: <b>${esc(mapped)}</b>${same ? ' (trùng)' : ' — <b style="color:var(--warn)">khác đáp án trên, nên kiểm tra lại</b>'}</div>`);
+  }
+  return `<div class="explain">${bits.join('')}</div>`;
+}
+
+function viewPractice(subj, set, quiz = false) {
+  const S = DATA.subjects.find(s => s.id === subj);
+  let qs = pool(subj, set);
+  if (quiz) qs = shuffle(qs).slice(0, QUIZ_N); else if (settings.shuffleQ) qs = shuffle(qs);
+  const title = quiz ? (set === 'rand' ? 'Đề ngẫu nhiên' : S.sets.find(s => s.id === set)?.name || '') : 'Luyện tập';
+  const items = qs.map(prep), picks = items.map(() => []), checked = items.map(() => false);
+  let i = 0, correct = 0;
+  const draw = () => {
+    const it = items[i], q = it.q, done = checked[i];
+    app.innerHTML = `
+      <div class="crumbs"><a href="#/">Trang chủ</a> / <a href="#/${subj}">${esc(S.code)}</a> / ${esc(title)}</div>
+      <div class="progress-top" style="margin-top:12px"><i style="width:${(i + 1) / items.length * 100}%"></i></div>
+      <div class="card">
+        <div class="q-head"><span class="muted">Câu ${i + 1}/${items.length} · đúng ${correct}</span><span>${metaBadges(q)}</span></div>
+        <div class="q-text">${esc(q.question)}</div>
+        ${it.opts.map(o => {
+          let cls = '';
+          if (done) cls = q.answer.includes(o.key) ? 'ok' : picks[i].includes(o.key) ? 'bad' : '';
+          else if (picks[i].includes(o.key)) cls = 'sel';
+          return `<button class="opt ${cls}" data-k="${o.key}" ${done ? 'disabled' : ''}><span class="k">${o.show}</span><span>${esc(o.text)}</span></button>`;
+        }).join('')}
+        ${q.multi && !done ? `<button class="btn primary" id="check" ${picks[i].length ? '' : 'disabled'}>Kiểm tra</button>` : ''}
+        ${done ? explainBox(it) : ''}
+        <div class="nav">
+          <button class="btn" id="prev" ${i ? '' : 'disabled'}>← Câu trước</button>
+          <button class="btn ${done ? 'primary' : ''}" id="next">${i < items.length - 1 ? 'Câu sau →' : 'Kết thúc'}</button>
+        </div>
+        <div class="kbd">Phím tắt: A–${String.fromCharCode(64 + it.opts.length)} hoặc 1–${it.opts.length} để chọn · Enter: câu sau · ←/→</div>
+      </div>`;
+    const check = () => {
+      checked[i] = true;
+      const ok = picks[i].slice().sort().join() === q.answer.slice().sort().join();
+      if (ok) correct++; saveResult(q, ok); draw();
+    };
+    app.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+      const k = b.dataset.k;
+      if (q.multi) { picks[i] = picks[i].includes(k) ? picks[i].filter(x => x !== k) : [...picks[i], k]; draw(); }
+      else { picks[i] = [k]; check(); }
+    });
+    if ($('#check')) $('#check').onclick = check;
+    $('#prev').onclick = () => { if (i) { i--; draw(); } };
+    $('#next').onclick = () => { if (i < items.length - 1) { i++; draw(); } else finish(); };
+    document.onkeydown = e => {
+      if (e.target.tagName === 'INPUT') return;
+      const k = e.key.toUpperCase(), idx = /^[1-9]$/.test(k) ? +k - 1 : k.charCodeAt(0) - 65;
+      if (!done && k.length === 1 && idx >= 0 && idx < it.opts.length) app.querySelectorAll('.opt')[idx].click();
+      else if (e.key === 'Enter' || e.key === 'ArrowRight') $('#next').click();
+      else if (e.key === 'ArrowLeft') $('#prev').click();
+    };
+    window.scrollTo({ top: 0 });
+  };
+  const finish = () => {
+    const n = checked.filter(Boolean).length;
+    const wrongs = items.map((_, j) => j).filter(j => checked[j] && picks[j].slice().sort().join() !== items[j].q.answer.slice().sort().join());
+    app.innerHTML = `<div class="crumbs"><a href="#/">Trang chủ</a> / <a href="#/${subj}">${esc(S.code)}</a> / ${esc(title)}</div>
+      <div class="card" style="margin-top:12px;text-align:center">
+        <div class="muted">Kết quả · ${esc(title)}</div>
+        <div class="score">${correct}/${n}</div>
+        <div class="muted">${n ? Math.round(correct / n * 100) : 0}% câu đã làm là đúng${n < items.length ? ` · bỏ qua ${items.length - n} câu` : ''}${quiz ? ` · điểm ${(correct / items.length * 10).toFixed(1)}/10` : ''}</div>
+        <div class="row" style="justify-content:center;margin-top:18px">
+          <button class="btn primary" onclick="render()">${quiz ? 'Làm lại (đảo câu mới)' : 'Làm lại'}</button>
+          <button class="btn" onclick="go('#/${subj}')">Về môn học</button>
+        </div></div>
+      ${wrongs.length ? `<div class="sec-title">Câu làm sai (${wrongs.length})</div><div class="card">${wrongs.map(j => { const it = items[j]; return `
+        <div class="list-item"><div class="q">❌ ${esc(it.q.question)}</div>
+          <div class="o">Bạn chọn: ${esc(it.opts.filter(o => picks[j].includes(o.key)).map(o => o.show + '. ' + o.text).join(' · '))}</div>
+          <div class="a">Đáp án: ${esc(answerText(it))}</div>
+          ${it.q.key_fact ? `<div class="o">💡 ${esc(it.q.key_fact)}</div>` : ''}</div>`; }).join('')}</div>` : ''}`;
+    window.scrollTo({ top: 0 });
+  };
+  draw();
+}
+
+function viewExam(subj, set) {
+  const S = DATA.subjects.find(s => s.id === subj);
+  const items = shuffle(pool(subj, set)).slice(0, settings.examN).map(prep);
+  const picks = items.map(() => []), end = Date.now() + settings.examMin * 60000;
+  let i = 0, submitted = false;
+  const tick = () => {
+    const left = Math.max(0, end - Date.now()), el = $('#timer');
+    if (el) el.textContent = `${String(left / 60000 | 0).padStart(2, '0')}:${String((left / 1000 | 0) % 60).padStart(2, '0')}`;
+    if (!left && !submitted) submit();
+  };
+  const draw = () => {
+    const it = items[i], q = it.q;
+    app.innerHTML = `
+      <div class="crumbs"><a href="#/">Trang chủ</a> / <a href="#/${subj}">${esc(S.code)}</a> / Thi thử</div>
+      <div class="q-head" style="margin-top:10px"><span class="muted">Câu ${i + 1}/${items.length} · đã chọn ${picks.filter(p => p.length).length}</span><span class="timer">⏱ <span id="timer"></span></span></div>
+      <div class="card">
+        <div class="q-head"><span></span><span>${q.multi ? '<span class="badge">Chọn nhiều đáp án</span>' : ''}</span></div>
+        <div class="q-text">${esc(q.question)}</div>
+        ${it.opts.map(o => `<button class="opt ${picks[i].includes(o.key) ? 'sel' : ''}" data-k="${o.key}"><span class="k">${o.show}</span><span>${esc(o.text)}</span></button>`).join('')}
+        <div class="nav">
+          <button class="btn" id="prev" ${i ? '' : 'disabled'}>← Câu trước</button>
+          ${i < items.length - 1 ? '<button class="btn" id="next">Câu sau →</button>' : '<button class="btn primary" id="sub">Nộp bài</button>'}
+        </div>
+        <div class="palette">${items.map((_, j) => `<button class="${picks[j].length ? 'done' : ''} ${j === i ? 'cur' : ''}" data-j="${j}">${j + 1}</button>`).join('')}</div>
+        <div class="row" style="margin-top:16px"><button class="btn primary" id="sub2">Nộp bài</button></div>
+      </div>`;
+    app.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+      const k = b.dataset.k;
+      picks[i] = q.multi ? (picks[i].includes(k) ? picks[i].filter(x => x !== k) : [...picks[i], k]) : [k];
+      draw();
+    });
+    app.querySelectorAll('[data-j]').forEach(b => b.onclick = () => { i = +b.dataset.j; draw(); });
+    $('#prev').onclick = () => { if (i) { i--; draw(); } };
+    if ($('#next')) $('#next').onclick = () => { i++; draw(); };
+    [$('#sub'), $('#sub2')].forEach(b => b && (b.onclick = () => {
+      const left = picks.filter(p => !p.length).length;
+      if (!left || confirm(`Còn ${left} câu chưa chọn. Nộp bài?`)) submit();
+    }));
+    document.onkeydown = e => {
+      const k = e.key.toUpperCase(), idx = /^[1-9]$/.test(k) ? +k - 1 : k.charCodeAt(0) - 65;
+      if (k.length === 1 && idx >= 0 && idx < it.opts.length) app.querySelectorAll('.opt')[idx].click();
+      else if (e.key === 'ArrowRight' && $('#next')) $('#next').click();
+      else if (e.key === 'ArrowLeft') $('#prev').click();
+    };
+    tick();
+  };
+  const submit = () => {
+    submitted = true; clearInterval(timerId); document.onkeydown = null;
+    const res = items.map((it, j) => { const ok = picks[j].slice().sort().join() === it.q.answer.slice().sort().join(); saveResult(it.q, ok); return ok; });
+    const score = res.filter(Boolean).length;
+    app.innerHTML = `
+      <div class="crumbs"><a href="#/">Trang chủ</a> / <a href="#/${subj}">${esc(S.code)}</a> / Thi thử</div>
+      <div class="card" style="margin-top:12px;text-align:center">
+        <div class="muted">Điểm thi thử</div>
+        <div class="score">${(score / items.length * 10).toFixed(1)}</div>
+        <div class="muted">Đúng ${score}/${items.length} câu</div>
+        <div class="row" style="justify-content:center;margin-top:18px">
+          <button class="btn primary" onclick="render()">Thi lại đề khác</button>
+          <button class="btn" onclick="go('#/${subj}')">Về môn học</button>
+        </div>
+      </div>
+      <div class="sec-title">Xem lại bài làm</div>
+      <div class="card">${items.map((it, j) => `
+        <div class="list-item">
+          <div class="q">${res[j] ? '✅' : '❌'} Câu ${j + 1}. ${esc(it.q.question)}</div>
+          ${!res[j] ? `<div class="o">Bạn chọn: ${esc(it.opts.filter(o => picks[j].includes(o.key)).map(o => o.show + '. ' + o.text).join(' · ') || '(bỏ trống)')}</div>` : ''}
+          <div class="a">Đáp án: ${esc(answerText(it))}</div>
+          ${!res[j] && it.q.explanation ? `<div class="o">${esc(it.q.explanation)}</div>` : ''}
+        </div>`).join('')}</div>`;
+    window.scrollTo({ top: 0 });
+  };
+  draw();
+  timerId = setInterval(tick, 1000);
+}
+
+function viewList(subj, set) {
+  const S = DATA.subjects.find(s => s.id === subj), qs = pool(subj, set);
+  let hide = false, term = '';
+  const draw = () => {
+    const t = norm(term);
+    const shown = qs.filter(q => !t || norm(q.question + ' ' + q.options.map(o => o.text).join(' ')).includes(t));
+    $('#list').innerHTML = shown.length ? shown.map((q, j) => {
+      const it = prep({ ...q }); it.opts = q.options.map(o => ({ ...o, show: o.key }));
+      return `<div class="list-item">
+        <div class="q">${j + 1}. ${esc(q.question)} ${q.confidence && q.confidence !== 'high' ? `<span class="badge ${q.confidence}">${CONF[q.confidence]}</span>` : ''}</div>
+        <div class="o">${q.options.map(o => `${o.key}. ${esc(o.text)}`).join('<br>')}</div>
+        <div class="a" style="margin-top:4px;${hide ? 'filter:blur(6px);cursor:pointer' : ''}" onclick="this.style.filter='none'">→ ${esc(answerText(it))}</div>
+      </div>`;
+    }).join('') : '<div class="empty">Không tìm thấy câu nào.</div>';
+    $('#cnt').textContent = `${shown.length} câu`;
+  };
+  app.innerHTML = `
+    <div class="crumbs"><a href="#/">Trang chủ</a> / <a href="#/${subj}">${esc(S.code)}</a> / Xem nhanh</div>
+    <div class="row" style="margin:12px 0"><input type="search" id="q" placeholder="Tìm câu hỏi hoặc đáp án…" style="flex:1"></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="muted" id="cnt"></span><label class="toggle"><input type="checkbox" id="hide"> Che đáp án (bấm để xem)</label></div>
+    <div class="card" id="list"></div>`;
+  $('#q').oninput = e => { term = e.target.value; draw(); };
+  $('#hide').onchange = e => { hide = e.target.checked; draw(); };
+  draw();
+}
+
+render();
+</script>
+</body>
+</html>
