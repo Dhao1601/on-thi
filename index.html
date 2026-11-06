@@ -43,6 +43,13 @@
   .bar > i { display:block; height:100%; background:var(--ok); }
   .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
   .sec-title { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:26px 0 10px; font-weight:600; }
+  .lbsub { margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
+  .lbsub input { padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:inherit; font:inherit; }
+  table.lb { width:100%; border-collapse:collapse; font-size:15px; }
+  table.lb th { text-align:left; font-weight:600; color:var(--muted, inherit); padding:8px 6px; border-bottom:1px solid var(--line); }
+  table.lb td { padding:8px 6px; border-bottom:1px solid var(--line); }
+  table.lb tr.me td { background:var(--accent-soft); }
+  a.chip { text-decoration:none; color:inherit; }
   .quizbox { margin-top:14px; border-color:var(--accent); }
   .chips { display:flex; gap:8px; flex-wrap:wrap; }
   .chip { border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:6px 14px; cursor:pointer; font-size:14px; }
@@ -107,6 +114,7 @@
   <div id="app"></div>
 </div>
 <script src="data.js"></script>
+<script src="firebase-config.js"></script>
 <script>
 const DATA = window.QUIZ_DATA;
 const $ = s => document.querySelector(s);
@@ -114,6 +122,34 @@ const app = $('#app');
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const QUIZ_N = 50;
+
+// ---------- leaderboard (Firebase Firestore, optional) ----------
+const LB = {
+  ready: null,
+  on: () => !!window.FIREBASE_CONFIG,
+  init() {
+    if (this.ready) return this.ready;
+    if (!window.FIREBASE_CONFIG) return (this.ready = Promise.resolve(null));
+    const load = src => new Promise((ok, err) => { const el = document.createElement('script'); el.src = src; el.onload = ok; el.onerror = err; document.head.appendChild(el); });
+    const V = 'https://www.gstatic.com/firebasejs/10.12.2/';
+    return (this.ready = load(V + 'firebase-app-compat.js').then(() => load(V + 'firebase-firestore-compat.js'))
+      .then(() => { firebase.initializeApp(window.FIREBASE_CONFIG); return firebase.firestore(); })
+      .catch(e => { console.error(e); return null; }));
+  },
+  async submit(rec) {
+    const db = await this.init(); if (!db) throw new Error('Chưa kết nối được bảng xếp hạng');
+    await db.collection('scores').add({ ...rec, ts: firebase.firestore.FieldValue.serverTimestamp() });
+  },
+  async top(subj, set) {
+    const db = await this.init(); if (!db) return null;
+    const snap = await db.collection('scores').where('subj', '==', subj).where('set', '==', set).limit(2000).get();
+    const best = {};
+    snap.forEach(d => { const r = d.data(), b = best[r.uid];
+      if (!b || r.score > b.score || (r.score === b.score && r.ms < b.ms)) best[r.uid] = { ...r, plays: (b?.plays || 0) + 1 }; else b.plays++; });
+    return Object.values(best).sort((a, b) => b.score - a.score || a.ms - b.ms);
+  },
+};
+const fmtMs = ms => `${ms / 60000 | 0}:${String((ms / 1000 | 0) % 60).padStart(2, '0')}`;
 const CONF = { high: 'Độ tin cậy cao', medium: 'Độ tin cậy vừa', low: 'Độ tin cậy thấp' };
 
 // ---------- persistence (per-viewer; works without it) ----------
@@ -121,6 +157,7 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem('onthi:' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem('onthi:' + k, JSON.stringify(v)); } catch {} },
 };
+const myUid = (() => { let u = store.get('uid', null); if (!u) { u = Math.random().toString(36).slice(2) + Date.now().toString(36); store.set('uid', u); } return u; })();
 let results = store.get('results', {}); // qid -> {ok:bool, n:count}
 let settings = store.get('settings', { shuffleQ: true, shuffleO: false, examN: 40, examMin: 40 });
 const saveResult = (q, ok) => { const r = results[q.id] || { n: 0 }; r.ok = ok; r.n++; results[q.id] = r; store.set('results', results); };
@@ -163,6 +200,7 @@ function render() {
   if (!subj) return viewHome();
   if (!set) return viewReview(subj);
   if (set === 'settings') return viewSubject(subj);
+  if (set === 'top') return viewTop(subj, mode);
   if (mode === 'practice') return viewPractice(subj, set);
   if (mode === 'quiz') return viewPractice(subj, set, true);
   if (mode === 'exam') return viewExam(subj, set);
@@ -199,7 +237,9 @@ function viewReview(subj) {
         ${S.sets.length > 1 || S.sets[0].questions.length > QUIZ_N ? `<button class="chip on" data-quiz="rand">🎲 Đề ngẫu nhiên ${QUIZ_N} câu</button>` : ''}
         ${S.sets.map(s => `<button class="chip" data-quiz="${s.id}">${esc(s.name)} · ${Math.min(QUIZ_N, s.questions.length)} câu</button>`).join('')}
       </div>
-      <label class="toggle" style="margin-top:10px"><input type="checkbox" id="qso" ${settings.shuffleO ? 'checked' : ''}> Đảo cả thứ tự A/B/C/D</label>
+      <div class="row" style="margin-top:10px;justify-content:space-between">
+      <label class="toggle"><input type="checkbox" id="qso" ${settings.shuffleO ? 'checked' : ''}> Đảo cả thứ tự A/B/C/D</label>
+      <a class="btn" href="#/${subj}/top">🏆 Bảng xếp hạng</a></div>
     </div>
     <div class="sec-title">📖 Danh sách câu hỏi kèm đáp án</div>
     <div class="chips" id="sets"></div>
@@ -307,7 +347,7 @@ function viewPractice(subj, set, quiz = false) {
   if (quiz) qs = shuffle(qs).slice(0, QUIZ_N); else if (settings.shuffleQ) qs = shuffle(qs);
   const title = quiz ? (set === 'rand' ? 'Đề ngẫu nhiên' : S.sets.find(s => s.id === set)?.name || '') : 'Luyện tập';
   const items = qs.map(prep), picks = items.map(() => []), checked = items.map(() => false);
-  let i = 0, correct = 0;
+  let i = 0, correct = 0; const t0 = Date.now();
   const draw = () => {
     const it = items[i], q = it.q, done = checked[i];
     app.innerHTML = `
@@ -354,6 +394,7 @@ function viewPractice(subj, set, quiz = false) {
   };
   const finish = () => {
     const n = checked.filter(Boolean).length;
+    const ms = Date.now() - t0;
     const wrongs = items.map((_, j) => j).filter(j => checked[j] && picks[j].slice().sort().join() !== items[j].q.answer.slice().sort().join());
     app.innerHTML = `<div class="crumbs"><a href="#/">Trang chủ</a> / <a href="#/${subj}">${esc(S.code)}</a> / ${esc(title)}</div>
       <div class="card" style="margin-top:12px;text-align:center">
@@ -363,15 +404,49 @@ function viewPractice(subj, set, quiz = false) {
         <div class="row" style="justify-content:center;margin-top:18px">
           <button class="btn primary" onclick="render()">${quiz ? 'Làm lại (đảo câu mới)' : 'Làm lại'}</button>
           <button class="btn" onclick="go('#/${subj}')">Về môn học</button>
-        </div></div>
+        </div>
+        ${quiz && LB.on() ? (n === items.length ? `<div class="lbsub">
+          <div class="muted" style="margin-bottom:8px">⏱ ${fmtMs(ms)} · Lưu điểm lên bảng xếp hạng ${esc(title)}</div>
+          <div class="row" style="justify-content:center"><input id="nick" maxlength="24" placeholder="Tên của bạn" value="${esc(store.get('name', ''))}">
+          <button class="btn primary" id="sendScore">🏆 Lưu điểm</button></div><div class="muted" id="lbmsg" style="margin-top:6px"></div></div>`
+          : `<div class="muted" style="margin-top:14px">Làm hết ${items.length} câu để được lên bảng xếp hạng.</div>`) : ''}
+        </div>
       ${wrongs.length ? `<div class="sec-title">Câu làm sai (${wrongs.length})</div><div class="card">${wrongs.map(j => { const it = items[j]; return `
         <div class="list-item"><div class="q">❌ ${esc(it.q.question)}</div>
           <div class="o">Bạn chọn: ${esc(it.opts.filter(o => picks[j].includes(o.key)).map(o => o.show + '. ' + o.text).join(' · '))}</div>
           <div class="a">Đáp án: ${esc(answerText(it))}</div>
           ${it.q.key_fact ? `<div class="o">💡 ${esc(it.q.key_fact)}</div>` : ''}</div>`; }).join('')}</div>` : ''}`;
+    if ($('#sendScore')) $('#sendScore').onclick = async () => {
+      const name = $('#nick').value.trim().slice(0, 24); if (!name) return $('#nick').focus();
+      store.set('name', name); $('#sendScore').disabled = true; $('#lbmsg').textContent = 'Đang lưu…';
+      try {
+        await LB.submit({ name, uid: myUid, subj, set, score: correct, total: items.length, ms });
+        $('#lbmsg').innerHTML = `Đã lưu! <a href="#/${subj}/top/${set}">Xem bảng xếp hạng →</a>`;
+      } catch (e) { $('#sendScore').disabled = false; $('#lbmsg').textContent = 'Không lưu được: ' + e.message; }
+    };
     window.scrollTo({ top: 0 });
   };
   draw();
+}
+
+function viewTop(subj, set) {
+  const S = DATA.subjects.find(s => s.id === subj); if (!S) return go('#/');
+  const tabs = [['rand', `🎲 Đề ngẫu nhiên`], ...S.sets.map(s => [s.id, s.name])];
+  set = set || 'rand';
+  app.innerHTML = `
+    <div class="crumbs"><a href="#/">Trang chủ</a> / <a href="#/${subj}">${esc(S.code)}</a> / Bảng xếp hạng</div>
+    <h2 style="margin:6px 0 12px">🏆 Bảng xếp hạng ${esc(S.code)}</h2>
+    <div class="chips">${tabs.map(([id, l]) => `<a class="chip ${id === set ? 'on' : ''}" href="#/${subj}/top/${id}">${esc(l)}</a>`).join('')}</div>
+    <p class="muted">Mỗi người tính lần làm tốt nhất: điểm cao hơn xếp trên, bằng điểm thì ai làm nhanh hơn xếp trên.</p>
+    <div class="card" id="board"><div class="empty">Đang tải…</div></div>
+    <div class="row" style="margin-top:16px"><a class="btn primary" href="#/${subj}/${set}/quiz">✍️ Làm đề này</a></div>`;
+  if (!LB.on()) { $('#board').innerHTML = '<div class="empty">Bảng xếp hạng chưa được bật (thiếu cấu hình Firebase).</div>'; return; }
+  LB.top(subj, set).then(rows => {
+    if (!rows) throw new Error('Không kết nối được');
+    $('#board').innerHTML = rows.length ? `<table class="lb"><tr><th>#</th><th>Tên</th><th>Điểm</th><th>Thời gian</th><th>Lượt</th></tr>${rows.slice(0, 100).map((r, k) => `
+      <tr class="${r.uid === myUid ? 'me' : ''}"><td>${['🥇', '🥈', '🥉'][k] || k + 1}</td><td>${esc(r.name)}</td><td><b>${r.score}</b>/${r.total}</td><td>${fmtMs(r.ms)}</td><td class="muted">${r.plays}</td></tr>`).join('')}</table>`
+      : '<div class="empty">Chưa có ai. Làm đề để giành hạng nhất!</div>';
+  }).catch(e => { $('#board').innerHTML = `<div class="empty">Không tải được bảng xếp hạng: ${esc(e.message)}</div>`; });
 }
 
 function viewExam(subj, set) {
